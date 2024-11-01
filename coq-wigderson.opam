@@ -6,5 +6,5 @@ install: [make "install"]
 depends: [
   "ocaml"
   "coq" {>= "8.17" & < "8.18~"}
-  "coq-hammer-tactics"
+  "coq-hammer"
 ]
