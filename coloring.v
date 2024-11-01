@@ -917,7 +917,6 @@ Proof.
       scongruence.
 Admitted.
 
-Proof.
 Lemma asfadsf:
   forall (g g' : graph) (i j : node) (n : nat) (ns : nodeset),
     undirected g ->
