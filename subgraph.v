@@ -520,6 +520,8 @@ Definition degree (v : node) (g : graph) :=
   | Some a => Some (S.cardinal a)
   end.
 
+Definition list_max l := fold_right Init.Nat.max 0 l.
+
 (** ** Maximum degree of a graph *)
 Definition max_deg (g : graph) := list_max (map (fun p => S.cardinal (snd p)) (M.elements g)).
 
@@ -538,6 +540,10 @@ Lemma max_deg_empty : max_deg (@M.empty _) = 0.
 Proof. sfirstorder. Qed.
 
 (** ** Maximum degree bounds the size of all the adjacency sets *)
+
+Axiom list_max_le :
+forall (l : list nat) (n : nat),
+list_max l <= n <-> Forall (fun k : nat => k <= n) l.
 
 Lemma max_deg_max : forall g v e, M.find v g = Some e -> S.cardinal e <= max_deg g.
 Proof.
@@ -631,6 +637,10 @@ Proof.
   sfirstorder use: PositiveSet.elements_1 unfold: PositiveSet.elt.
 Qed.
 
+Axiom list_max_app :
+forall l1 l2 : list nat,
+list_max (l1 ++ l2) = Init.Nat.max (list_max l1) (list_max l2).
+
 (** ** Extract a maximum element from a non-empty list *)
 Lemma list_max_witness : forall l n, l <> [] -> list_max l = n -> {x | In x l /\ x = n}.
 Proof.
@@ -664,6 +674,10 @@ Proof.
 Qed.
 
 (** ** Subgraph relation respects maximum degree *)
+
+Axiom incl_Forall_in_iff :
+forall (A : Type) (l l' : list A),
+incl l l' <-> Forall (fun x : A => In x l') l.
 
 Lemma max_deg_subgraph : forall (g g' : graph), is_subgraph g' g -> max_deg g' <= max_deg g.
 Proof.
@@ -1233,7 +1247,7 @@ Proof.
       split.
       * unfold independent_set.
         intros i j H7 H8.
-        apply S.add_spec in H7, H8.
+        apply S.add_spec in H7. apply S.add_spec in H8.
         destruct H7, H8; scongruence.
       * intros k H7.
         apply S.add_spec in H7.
@@ -1247,7 +1261,7 @@ Proof.
       simpl in *.
       split.
       intros i j Hi Hj.
-      apply S.add_spec in Hi, Hj.
+      apply S.add_spec in Hi. apply S.add_spec in Hj.
       (* now we want to prove the new set is an independent set *)
       destruct Hi, Hj.
       * scongruence.

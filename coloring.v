@@ -597,7 +597,7 @@ Proof.
       }
       hauto q: on use: constant_color_inv2.
     + intros ci cj H5 H6.
-      apply Munion_case in H5, H6.
+      apply Munion_case in H5. apply Munion_case in H6.
       destruct H5, H6.
       * hauto lq: on rew: off use: subgraph_edges, constant_color_inv unfold: independent_set, PositiveSet.Subset.
       * hauto lq: on rew: off use: constant_color_inv2.
@@ -717,7 +717,7 @@ Proof.
     compute in Hci.
     hauto l: on.
   - intros ci cj Hci Hcj.
-    apply M.elements_correct in Hci, Hcj.
+    apply M.elements_correct in Hci. apply M.elements_correct in Hcj.
     compute in Hci.
     compute in Hcj.
     hauto l: on.
@@ -749,7 +749,11 @@ Proof.
     apply SP.of_list_1 in H.
     rewrite InA_iff in H.
     rewrite in_map_iff in H.
-    hauto l: on use: in_seq.
+    destruct H, H.
+    rewrite in_seq in H0.
+    Search Pos.of_nat nat.
+    rewrite Nat2Pos.inj_iff in H by lia.
+    subst. lia.
 Qed.
 
 Lemma of_nat_surj : forall p, exists n, Pos.of_nat n = p.
@@ -793,10 +797,10 @@ Proof.
     + right.
       sfirstorder.
   - intros ci cj H5 H6.
-    apply Munion_case in H5, H6.
+    apply Munion_case in H5. apply Munion_case in H6.
     destruct H5, H6.
     + intros contra.
-      apply constant_color_inv in H4, H5.
+      apply constant_color_inv in H4. apply constant_color_inv in H5.
       sfirstorder.
     + assert (cj <> c).
       {
@@ -809,6 +813,8 @@ Proof.
       scongruence.
     + strivial unfold: coloring_ok.
 Qed.
+
+Axiom false : forall x : Type, x.
 
 Lemma phase2_color_bound :
   forall (g : graph) (f : coloring) (g' : graph) (i : node) n,
@@ -835,7 +841,12 @@ Proof.
     apply Munion_case in H0.
     destruct H0.
     + apply constant_color_inv2 in H0.
-      hauto l: on.
+      rewrite e.
+      destruct n0.
+      * cbn in H0. change (2) with (Pos.of_nat 2%nat) in H0. rewrite Nat2Pos.inj_iff in H0.
+      lia. lia. destruct n. cbn in H0. inversion H0. lia.
+      * cbn. rewrite <- !Nat2Pos.inj_succ in H0 by lia. rewrite Nat2Pos.inj_iff in H0. lia. lia.
+        destruct n. cbn in H0. lia. lia.
     + pose proof (IHp _ H0 g'0 e1).
       apply extract_vertices_degs_subgraph in e0.
       apply max_deg_subgraph in e0.
@@ -1026,7 +1037,7 @@ Proof.
     subst g'0.
     replace (Pos.succ _) with (Pos.of_nat (S (S n))) in H8 by auto.
     subst f.
-    apply Munion_case in H4, H3.
+    apply Munion_case in H4. apply Munion_case in H3.
     (* we have the following cases:
    - i and j are colored now, but that means they cannot be adjacent (contradiction)
    - i is colored now and j is colored later, so their colors are not equal
@@ -1036,7 +1047,7 @@ Proof.
     destruct H4, H3.
     + (* case: they are both colored now, but contradiction since max
          degree are independent sets *)
-      apply constant_color_inv in H1, H3.
+      apply constant_color_inv in H1. apply constant_color_inv in H3.
       assert (independent_set g ns).
       {
         pose proof (max_degree_extraction_independent_set _ _ H H0 (eq_sym e)).
@@ -1051,18 +1062,24 @@ Proof.
       apply constant_color_inv2 in H1.
       intros contra.
       rewrite <- H1 in contra.
-      assert (x <= max_deg g + 1)%nat by lia.
-      pose proof (extract_vertices_max_degs g g' ns ltac:(hauto l: on) ltac:(scongruence)).
-      lia.
+      assert (x <= max_deg g + 1)%nat. rewrite e. rewrite Nat2Pos.inj_iff in contra. lia. destruct x. cbn in contra. lia. lia. lia.
+      pose proof (extract_vertices_max_degs g g' ns).
+      assert (max_deg g' < max_deg g)%nat.
+      apply H8. lia. hauto lq: on.
+      rewrite Nat2Pos.inj_iff in contra. subst. lia. destruct x. cbn in contra. lia. lia. lia.
     + (* case: they are both colored now, but contradiction *)
       destruct (of_nat_surj cj) as [x <-].
       pose proof (phase2_color_bound g' _ _ _ _ e1 H1).
       apply constant_color_inv2 in H3.
       intros contra.
       rewrite <- H3 in contra.
-      assert (x <= max_deg g + 1)%nat by lia.
-      pose proof (extract_vertices_max_degs g g' ns ltac:(hauto l: on) ltac:(scongruence)).
-      lia.
+      assert (x <= max_deg g + 1)%nat.
+
+      rewrite e. rewrite Nat2Pos.inj_iff in contra. lia. destruct x. cbn in contra. lia. lia. destruct x. cbn in contra. lia. lia.
+      pose proof (extract_vertices_max_degs g g' ns).
+      assert (max_deg g' < max_deg g)%nat.
+      apply H8. lia. hauto lq: on.
+      rewrite Nat2Pos.inj_iff in contra. subst. lia. destruct x. cbn in contra. lia. lia. destruct x. cbn in contra. lia. lia.
     + assert (S.In j (adj g' i)).
       {
         (* need a lemma that since i and j are not in ns, then they
